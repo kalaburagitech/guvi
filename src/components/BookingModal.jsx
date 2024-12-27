@@ -237,9 +237,13 @@ const style = {
   left: "50%",
   transform: "translate(-50%, -50%)",
   width: 500,
+  maxHeight: "90vh",  // Limit max height to 90% of the viewport height
+  overflowY: "auto",  // Allow vertical scrolling if content exceeds max height
   bgcolor: "background.paper",
   boxShadow: 24,
+  padding: "16px",  // Add padding for better spacing
 };
+
 
 const timeSlots = [
   "10 AM - 11 AM",
