@@ -1,5 +1,5 @@
 import { Card, CardContent, Grid2, Typography, CardMedia } from "@mui/material";
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import BookingModal from "./BookingModal";
 import { useState, useEffect } from "react";
 
@@ -9,7 +9,7 @@ export default function HotelCards({ selectedTags, sort, searchedHotel }) {
   const [restaurentInfo, setRestaurentInfo] = useState([]); // To hold the fetched hotel data
   const [loading, setLoading] = useState(true); // To track loading state
   const [error, setError] = useState(null); // To handle errors during the fetch process
-
+ const navigate = useNavigate();
   const { location } = useParams();
 
   // Function to fetch restaurant data from the API
@@ -93,6 +93,7 @@ export default function HotelCards({ selectedTags, sort, searchedHotel }) {
       setModalState({ ...eachHotel, location: location.toLowerCase() });
     } else {
       alert("Please log in first.");
+      navigate("/signin");
     }
   };
   
