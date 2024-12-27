@@ -4,7 +4,6 @@ import {
   Typography,
   Grid2,
   Slider,
-  Button,
   Chip,
 } from "@mui/material";
 import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
@@ -17,27 +16,52 @@ import { useSnackbar } from "notistack";
 import { LoadingButton } from "@mui/lab";
 
 export default function BookingModal({ handleClose, modalState }) {
-  const { id } = modalState || {};
+  const { id, location } = modalState || {};  // Destructure to get hotelId and location passed to the modal
   const { enqueueSnackbar } = useSnackbar();
   const username = localStorage.getItem("username");
 
+  // State for booking details
   const [bookingState, setBookingState] = useState({
     selectedTime: "",
     selectedDate: "",
     selectedSeats: 0,
   });
+
+  // State for hotel details
+  const [hotelDetails, setHotelDetails] = useState(null);
+
+  // State for booked time slots
   const [bookedTimeSlots, setBookedTimeSlots] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Fetch hotel details when modal is opened
   useEffect(() => {
-    if (id) {
+    if (id && location) {
       setBookingState({
         selectedTime: "",
         selectedDate: "",
         selectedSeats: 0,
       });
+      getHotelDetails(location, id);  // Fetch hotel details by city and ID
     }
-  }, [id]);
+  }, [id, location]);
+
+  // Function to fetch hotel details based on location and ID
+  const getHotelDetails = async (city, hotelId) => {
+    try {
+      const response = await axios.get(`http://localhost:5000/api/restaurants/${city}/${hotelId}`);
+      const data = response.data;
+
+      if (data) {
+        setHotelDetails(data);  // Set the hotel details in state
+      } else {
+        enqueueSnackbar("Hotel not found!", { variant: "error" });
+      }
+    } catch (error) {
+      console.error("Error fetching hotel details:", error);
+      enqueueSnackbar("Error fetching hotel details!", { variant: "error" });
+    }
+  };
 
   const handleSliderChange = (event) => {
     setBookingState({
@@ -123,11 +147,24 @@ export default function BookingModal({ handleClose, modalState }) {
           alignItems="center"
           spacing={2}
         >
-          <Grid2 width="100%" textAlign="center">
-            <Typography style={{ background: "black" }} color="white" variant="h5">
-              Select an Offer or Deal
-            </Typography>
-          </Grid2>
+          {/* Display Hotel Details */}
+          {hotelDetails && (
+            <Grid2 width="100%" textAlign="center">
+              <Typography variant="h5">{hotelDetails.name}</Typography>
+              <Typography variant="body1">{hotelDetails.location}</Typography>
+              <Typography variant="h6">Price: ₹{hotelDetails.price}</Typography>
+              <Typography variant="body2">{hotelDetails.priceDetail}</Typography>
+              <Typography variant="h6">Rating: {hotelDetails.ratings}</Typography>
+              <img
+                src={hotelDetails.image}
+                alt={hotelDetails.name}
+                style={{ width: "100%", height: "auto", marginBottom: "1rem" }}
+              />
+              <Typography variant="body2">
+                Tags: {hotelDetails.tags.join(", ")}
+              </Typography>
+            </Grid2>
+          )}
 
           <Grid2 width="60%" textAlign="center">
             <Typography variant="h6">Select Seats</Typography>

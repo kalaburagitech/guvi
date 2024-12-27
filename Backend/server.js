@@ -16,7 +16,8 @@ app.use(express.json());
 
 // Routes
 app.use('/api', authRoutes);
-// app.use('/api/restaurants', restaurantRoutes);
+// Use the restaurant routes
+app.use('/api', restaurantRoutes);
 // app.use('/api/reviews', reviewRoutes);
 // app.use('/api/reservations', reservationRoutes);
 

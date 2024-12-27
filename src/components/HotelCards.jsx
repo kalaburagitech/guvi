@@ -38,12 +38,39 @@ export default function HotelCards({ selectedTags, hotelData, sort, searchedHote
   }
 
   const handleBookingModelOpen = (eachHotel) => {
+    // Extract city from the location string (e.g., 'Okhla, South Delhi' -> 'Delhi')
+    const locationParts = eachHotel.location.trim().split(","); // Split by comma to isolate the city part
+  
+    // Get the last part of the location string and normalize the city name
+    let cityName = locationParts[locationParts.length - 1].trim(); // Take the last part and remove extra spaces
+    
+    // Handle specific prefixes like "Central", "South", etc.
+    // If the city name contains terms like "Central" or "South", remove them
+    const prefixesToRemove = ['Central', 'South', 'North', 'East'];
+    prefixesToRemove.forEach(prefix => {
+      cityName = cityName.replace(prefix, "").trim();  // Remove any prefix and trim spaces
+    });
+  
+    // Normalize the city name: lowercase and remove any spaces
+    cityName = cityName.toLowerCase().replace(/\s+/g, '');  // Remove spaces and lowercase
+  
+    // Construct the API URL with the correct format (city in lowercase and hotel ID at the end)
+    const hotelId = eachHotel.id;
+    const apiUrl = `http://localhost:5000/api/restaurants/${cityName}/${hotelId}`;
+    
+    // Check if the user is logged in and pass the correct data to the modal
     if (username) {
-      setModalState(eachHotel); // Set the selected hotel to the modal state
+      setModalState({ ...eachHotel, location: cityName }); // Pass the formatted city name
+      console.log("Booking modal opened for hotel in", cityName, "with ID:", hotelId); // Log for debugging
+      console.log("Constructed API URL:", apiUrl); // Check the final API URL
     } else {
       alert("Please log in first.");
     }
   };
+  
+  
+  
+  
 
   const handleRatingSort = (restaurentInfo) => {
     restaurentInfo.sort((a, b) => a.ratings > b.ratings ? -1 : 1);
