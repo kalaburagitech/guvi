@@ -14,19 +14,26 @@ import SearchIcon from "@mui/icons-material/Search";
 import HeaderSubText from "./HeaderSubText";
 import RegistrationModal from "./RegistrationModal";
 import BookingModal from "./UserBookingModal";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 
 export default function NavBar({ setSearchedHotel }) {
   const [registrationModalOpen, setRegistrationModalOpen] = useState(false);
   const [bookingModalOpen, setBookingModalOpen] = useState(false);
+  const [authToken, setAuthToken] = useState(localStorage.getItem("authToken"));
 
   const navigate = useNavigate();
-  const username = localStorage.getItem("username");
+  const username = localStorage.getItem("authToken");
+
+  useEffect(() => {
+    setAuthToken(localStorage.getItem("authToken")); // Update authToken state when it changes in localStorage
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem("username");
+    localStorage.removeItem("authToken"); // Remove authToken on logout
+    setAuthToken(null); // Update the state to reflect logout
     window.location.reload();
   };
 
@@ -41,13 +48,13 @@ export default function NavBar({ setSearchedHotel }) {
           padding={1}
         >
           <Grid2 item>
-          <Link to="/" className="logo-link">
-        <img
-          src="https://www.guvi.in/web-build/images/guvi-logo.8eeef9e2027d374479531095b012a87e.svg"
-          alt="Guvi Logo"
-          className="logo-img"
-        />
-      </Link>
+            <Link to="/" className="logo-link">
+              <img
+                src="https://www.guvi.in/web-build/images/guvi-logo.8eeef9e2027d374479531095b012a87e.svg"
+                alt="Guvi Logo"
+                className="logo-img"
+              />
+            </Link>
           </Grid2>
 
           <Grid2 item>
@@ -55,11 +62,10 @@ export default function NavBar({ setSearchedHotel }) {
               disablePortal
               options={Locations}
               sx={{ width: 300 }}
-              renderInput={(params) => (
-                <TextField {...params} label="Locations" />
-              )}
-              onChange={(e) => {
-                navigate("/" + e.target.innerHTML);
+              defaultValue={Locations.find((loc) => loc.label === "Delhi")} // Set default value to Delhi
+              renderInput={(params) => <TextField {...params} label="Locations" />}
+              onChange={(event, value) => {
+                if (value) navigate(`/${value.label}`);
               }}
             />
           </Grid2>
@@ -85,7 +91,8 @@ export default function NavBar({ setSearchedHotel }) {
           </Grid2>
 
           <Grid2 item>
-            {username ? (
+            {authToken ? (
+              // If authToken is present, show "My Booking" and "Sign Out"
               <Grid2 container gap={2}>
                 <Button
                   variant="contained"
@@ -94,10 +101,11 @@ export default function NavBar({ setSearchedHotel }) {
                   My Booking
                 </Button>
                 <Button variant="contained" onClick={handleLogout}>
-                  Logout
+                  Sign Out
                 </Button>
               </Grid2>
             ) : (
+              // If authToken is not present, show "Sign In" and "Sign Up"
               <Grid2 container gap={2}>
                 <Button
                   variant="contained"

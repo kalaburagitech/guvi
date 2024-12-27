@@ -1,59 +1,56 @@
+import React, { useEffect, useState } from "react";
 import {
   Modal,
   Box,
   Typography,
-  Grid2,
+  Grid,
   Slider,
   Chip,
+  Button,
+  IconButton,
 } from "@mui/material";
 import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import { useEffect, useState } from "react";
 import axios from "axios";
 import { useSnackbar } from "notistack";
 import { LoadingButton } from "@mui/lab";
+import { LocationOn, Star, AttachMoney, Group, Close } from "@mui/icons-material";
 
 export default function BookingModal({ handleClose, modalState }) {
-  const { id, location } = modalState || {};  // Destructure to get hotelId and location passed to the modal
+  const { id, location } = modalState || {};
   const { enqueueSnackbar } = useSnackbar();
-  const username = localStorage.getItem("username");
+  const username = localStorage.getItem("authToken");
 
-  // State for booking details
   const [bookingState, setBookingState] = useState({
     selectedTime: "",
     selectedDate: "",
-    selectedSeats: 0,
+    selectedSeats: 1,
   });
 
-  // State for hotel details
   const [hotelDetails, setHotelDetails] = useState(null);
-
-  // State for booked time slots
   const [bookedTimeSlots, setBookedTimeSlots] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Fetch hotel details when modal is opened
   useEffect(() => {
     if (id && location) {
       setBookingState({
         selectedTime: "",
         selectedDate: "",
-        selectedSeats: 0,
+        selectedSeats: 1,
       });
-      getHotelDetails(location, id);  // Fetch hotel details by city and ID
+      getHotelDetails(location, id);
     }
   }, [id, location]);
 
-  // Function to fetch hotel details based on location and ID
   const getHotelDetails = async (city, hotelId) => {
     try {
       const response = await axios.get(`http://localhost:5000/api/restaurants/${city}/${hotelId}`);
       const data = response.data;
 
       if (data) {
-        setHotelDetails(data);  // Set the hotel details in state
+        setHotelDetails(data);
       } else {
         enqueueSnackbar("Hotel not found!", { variant: "error" });
       }
@@ -63,10 +60,10 @@ export default function BookingModal({ handleClose, modalState }) {
     }
   };
 
-  const handleSliderChange = (event) => {
+  const handleSliderChange = (event, newValue) => {
     setBookingState({
       ...bookingState,
-      selectedSeats: event.target.value,
+      selectedSeats: newValue,
     });
   };
 
@@ -107,7 +104,7 @@ export default function BookingModal({ handleClose, modalState }) {
           setBookingState({
             selectedTime: "",
             selectedDate: "",
-            selectedSeats: 0,
+            selectedSeats: 1,
           });
           handleClose();
           enqueueSnackbar("Booking Created successfully!", { variant: "success" });
@@ -140,92 +137,112 @@ export default function BookingModal({ handleClose, modalState }) {
   return (
     <Modal open={Boolean(modalState)} onClose={handleClose}>
       <Box sx={style}>
-        <Grid2
-          container
-          flexDirection="column"
-          justifyContent="center"
-          alignItems="center"
-          spacing={2}
+        <IconButton
+          aria-label="close"
+          onClick={handleClose}
+          sx={{
+            position: 'absolute',
+            right: 8,
+            top: 8,
+            color: (theme) => theme.palette.grey[500],
+          }}
         >
-          {/* Display Hotel Details */}
-          {hotelDetails && (
-            <Grid2 width="100%" textAlign="center">
-              <Typography variant="h5">{hotelDetails.name}</Typography>
-              <Typography variant="body1">{hotelDetails.location}</Typography>
-              <Typography variant="h6">Price: ₹{hotelDetails.price}</Typography>
-              <Typography variant="body2">{hotelDetails.priceDetail}</Typography>
-              <Typography variant="h6">Rating: {hotelDetails.ratings}</Typography>
-              <img
-                src={hotelDetails.image}
-                alt={hotelDetails.name}
-                style={{ width: "100%", height: "auto", marginBottom: "1rem" }}
-              />
-              <Typography variant="body2">
-                Tags: {hotelDetails.tags.join(", ")}
-              </Typography>
-            </Grid2>
-          )}
+          <Close />
+        </IconButton>
+        <Grid container spacing={3}>
+          {/* Left side - Hotel Details */}
+          <Grid item xs={12} md={6}>
+            {hotelDetails && (
+              <Box>
+                <img
+                  src={hotelDetails.image}
+                  alt={hotelDetails.name}
+                  style={{ width: "100%", height: "300px", objectFit: "cover", borderRadius: "8px" }}
+                />
+                <Typography variant="h4" sx={{ mt: 2, mb: 1, fontWeight: 'bold' }}>{hotelDetails.name}</Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                  <LocationOn color="primary" />
+                  <Typography variant="body1" sx={{ ml: 1 }}>{hotelDetails.location}</Typography>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                  <AttachMoney color="primary" />
+                  <Typography variant="h6" sx={{ ml: 1 }}>₹{hotelDetails.price}</Typography>
+                  <Typography variant="body2" sx={{ ml: 1 }}>({hotelDetails.priceDetail})</Typography>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <Star color="primary" />
+                  <Typography variant="h6" sx={{ ml: 1 }}>{hotelDetails.ratings}</Typography>
+                </Box>
+                <Box>
+                  {hotelDetails.tags.map((tag, index) => (
+                    <Chip key={index} label={tag} sx={{ mr: 1, mb: 1 }} />
+                  ))}
+                </Box>
+              </Box>
+            )}
+          </Grid>
 
-          <Grid2 width="60%" textAlign="center">
-            <Typography variant="h6">Select Seats</Typography>
-            <Slider
-              defaultValue={0}
-              valueLabelDisplay="auto"
-              step={1}
-              marks
-              min={1}
-              max={20}
-              onChange={handleSliderChange}
-            />
-          </Grid2>
-
-          <Grid2>
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
-              <DemoContainer components={["DatePicker"]}>
-                <DatePicker onChange={handleDateChange} label="Select Date" />
-              </DemoContainer>
-            </LocalizationProvider>
-          </Grid2>
-
-          <Grid2
-            container
-            flexDirection="column"
-            justifyContent="center"
-            alignItems="center"
-          >
-            <Typography variant="h6">Select Time</Typography>
-            <Grid2
-              paddingLeft={4}
-              paddingRight={4}
-              container
-              justifyContent="center"
-              alignItems="center"
-            >
-              {timeSlots.map((eachTime) => (
-                <Grid2 key={eachTime}>
-                  <Chip
-                    color={bookingState.selectedTime === eachTime ? "success" : "default"}
-                    onClick={() => handleChipClick(eachTime)}
-                    label={eachTime}
-                    clickable
-                    disabled={bookedTimeSlots.includes(eachTime)}
+          {/* Right side - Booking Form */}
+          <Grid item xs={12} md={6}>
+            <Typography variant="h5" gutterBottom>Make a Reservation</Typography>
+            <Box sx={{ mb: 3 }}>
+              <LocalizationProvider dateAdapter={AdapterDayjs}>
+                <DemoContainer components={["DatePicker"]}>
+                  <DatePicker
+                    label="Select Date"
+                    onChange={handleDateChange}
+                    sx={{ width: '100%' }}
                   />
-                </Grid2>
-              ))}
-            </Grid2>
-          </Grid2>
+                </DemoContainer>
+              </LocalizationProvider>
+            </Box>
 
-          <Grid2 paddingBottom={4}>
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="h6" gutterBottom>Select Time</Typography>
+              <Grid container spacing={1}>
+                {timeSlots.map((eachTime) => (
+                  <Grid item key={eachTime}>
+                    <Chip
+                      color={bookingState.selectedTime === eachTime ? "primary" : "default"}
+                      onClick={() => handleChipClick(eachTime)}
+                      label={eachTime}
+                      clickable
+                      disabled={bookedTimeSlots.includes(eachTime)}
+                    />
+                  </Grid>
+                ))}
+              </Grid>
+            </Box>
+
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="h6" gutterBottom>Select Seats</Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Group color="primary" />
+                <Slider
+                  value={bookingState.selectedSeats}
+                  onChange={handleSliderChange}
+                  valueLabelDisplay="auto"
+                  step={1}
+                  marks
+                  min={1}
+                  max={20}
+                  sx={{ ml: 2, flex: 1 }}
+                />
+              </Box>
+            </Box>
+
             <LoadingButton
               loading={isLoading}
               variant="contained"
               color="primary"
               onClick={handleBooking}
+              fullWidth
+              size="large"
             >
               Make a Booking
             </LoadingButton>
-          </Grid2>
-        </Grid2>
+          </Grid>
+        </Grid>
       </Box>
     </Modal>
   );
@@ -236,14 +253,15 @@ const style = {
   top: "50%",
   left: "50%",
   transform: "translate(-50%, -50%)",
-  width: 500,
-  maxHeight: "90vh",  // Limit max height to 90% of the viewport height
-  overflowY: "auto",  // Allow vertical scrolling if content exceeds max height
+  width: "90%",
+  maxWidth: "1000px",
+  maxHeight: "90vh",
+  overflowY: "auto",
   bgcolor: "background.paper",
   boxShadow: 24,
-  padding: "16px",  // Add padding for better spacing
+  p: 4,
+  borderRadius: "8px",
 };
-
 
 const timeSlots = [
   "10 AM - 11 AM",
@@ -255,3 +273,4 @@ const timeSlots = [
   "9 PM - 10 PM",
   "10 PM - 11 PM",
 ];
+

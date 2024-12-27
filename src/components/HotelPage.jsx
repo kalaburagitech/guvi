@@ -11,13 +11,21 @@ import Select from "@mui/material/Select";
 
 import Filter from "./Filter";
 import HotelCards from "./HotelCards";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 
 export default function HotelPage({ searchedHotel }) {
   const [sort, setSort] = useState("Rating");
   const [selectedTags, setSelectedTags] = useState([]);
   const [restaurant, setRestaurant] = useState([]); // Added state for restaurant data
   const { location } = useParams(); // Extract location from URL
+  const navigate = useNavigate(); // Navigate to handle default location
+
+  // Set default location if location is undefined
+  useEffect(() => {
+    if (!location) {
+      navigate("/Delhi"); // Redirect to Delhi if no location is specified
+    }
+  }, [location, navigate]);
 
   // Fetch the restaurant data from the API based on the location
   useEffect(() => {
