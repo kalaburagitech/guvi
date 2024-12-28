@@ -8,7 +8,7 @@ export default function HeaderSubText() {
       gap={10}
       style={{ borderTop: "1px solid #7d79795c" }}
     >
-      <Grid2>
+      {/* <Grid2>
         <Button>Home</Button>
       </Grid2>
 
@@ -18,7 +18,7 @@ export default function HeaderSubText() {
 
       <Grid2>
         <Button>Blog</Button>
-      </Grid2>
+      </Grid2> */}
     </Grid2>
   );
 }

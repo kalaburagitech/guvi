@@ -7,6 +7,7 @@ const restaurantRoutes = require('./routes/restaurantRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
 const reservationRoutes = require('./routes/reservationRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 
 
 dotenv.config();
@@ -24,6 +25,8 @@ app.use('/api', bookingRoutes);
 
 // Use the review routes
 app.use('/api', reviewRoutes); // All review routes are prefixed with /api
+// Use admin routes
+app.use('/api', adminRoutes);
 
 // app.use('/api/reviews', reviewRoutes);
 // app.use('/api/reservations', reservationRoutes);

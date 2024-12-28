@@ -41,6 +41,7 @@ export default function BookingModal({ handleClose, modalState }) {
   const [rating, setRating] = useState(0);
   const [review, setReview] = useState("");
   const [reviews, setReviews] = useState([]);
+  const [reply, setReply] = useState(""); 
 
   // console.log(hotelDetails);
   
@@ -196,6 +197,33 @@ export default function BookingModal({ handleClose, modalState }) {
     }
   };
 
+
+  const handleAdminReply = async (reviewId) => {
+    if (!reply.trim()) {
+      enqueueSnackbar("Please enter a reply!", { variant: "warning" });
+      return;
+    }
+
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/api/admin/reply",
+        {
+          reviewId,
+          adminReply: reply,
+        }
+      );
+
+      if (response.status === 201) {
+        enqueueSnackbar("Reply submitted successfully!", { variant: "success" });
+        setReply("");  // Clear reply input after submitting
+        getReviews(id);  // Refresh reviews after reply
+      }
+    } catch (error) {
+      console.error("Error submitting reply:", error);
+      enqueueSnackbar("Error submitting reply!", { variant: "error" });
+    }
+  };
+
   return (
     <Modal open={Boolean(modalState)} onClose={handleClose}>
       <Box sx={style}>
@@ -340,7 +368,7 @@ export default function BookingModal({ handleClose, modalState }) {
         </Box>
       </Box>
     )}
-            <Box sx={{ mt: 3 }}>
+          <Box sx={{ mt: 3 }}>
   <Typography variant="h6" sx={{ fontWeight: "bold" }}>
     Reviews
   </Typography>
@@ -352,21 +380,58 @@ export default function BookingModal({ handleClose, modalState }) {
           <Typography variant="h6" sx={{ fontWeight: "bold", textTransform: "uppercase" }}>
             {review.userName}
           </Typography>
-          
+
           {/* Rating Display */}
           <Box sx={{ display: "flex", alignItems: "center" }}>
             <Rating value={review.rating} readOnly />
           </Box>
-          
+
           {/* Review text */}
           <Typography variant="body2" sx={{ mt: 1 }}>
             {review.review}
           </Typography>
-          
+
           {/* Date */}
           <Typography variant="caption" sx={{ mt: 1, display: "block", color: "gray" }}>
             {new Date(review.createdAt).toLocaleString()}
           </Typography>
+
+          {/* Admin Reply Section */}
+          {review.adminReply && (
+            <Box sx={{ mt: 2, borderTop: "1px solid #ddd", pt: 2 }}>
+              <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+                Admin Reply
+              </Typography>
+              <Typography variant="body2" sx={{ fontStyle: "italic", color: "gray" }}>
+                {review.adminReply}
+              </Typography>
+            </Box>
+          )}
+
+          {/* Admin Reply Input (Only visible to admin) */}
+          {email === "admin@gmail.com" && !review.adminReply && (
+            <Box sx={{ mt: 2 }}>
+              <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+                Admin Reply
+              </Typography>
+              <TextField
+                label="Write your reply"
+                multiline
+                rows={3}
+                value={reply}
+                onChange={(e) => setReply(e.target.value)}
+                fullWidth
+              />
+              <LoadingButton
+                variant="contained"
+                color="primary"
+                onClick={() => handleAdminReply(review._id)}
+                sx={{ mt: 2 }}
+              >
+                Reply
+              </LoadingButton>
+            </Box>
+          )}
         </Box>
       </Box>
     ))
@@ -374,6 +439,7 @@ export default function BookingModal({ handleClose, modalState }) {
     <Typography variant="body2">No reviews yet.</Typography>
   )}
 </Box>
+
 
           </Grid>
 
@@ -515,3 +581,4 @@ const timeSlots = [
   "8 PM - 9 PM",
   "9 PM - 10 PM",
 ];
+
