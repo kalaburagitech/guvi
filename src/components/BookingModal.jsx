@@ -372,7 +372,7 @@ export default function BookingModal({ handleClose, modalState }) {
   <Typography variant="h6" sx={{ fontWeight: "bold" }}>
     Reviews
   </Typography>
-  {reviews.length > 0 ? (
+  {hotelDetails && hotelDetails._id && reviews.length > 0 ? (
     reviews.map((review) => (
       <Box key={review._id} sx={{ mt: 2, border: "1px solid #ddd", padding: "16px", borderRadius: "8px" }}>
         <Box sx={{ display: "flex", flexDirection: "column" }}>
