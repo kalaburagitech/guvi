@@ -8,7 +8,7 @@ const bookingSchema = new mongoose.Schema({
   selectedDate: { type: String, required: true },
   selectedTime: { type: String, required: true },
   selectedSeats: { type: Number, required: true },
-  status: { type: String, default: "booked" }, // Default status
+  status: { type: String, default: "pending" }, // Default status
 }, { timestamps: true });
 
 module.exports = mongoose.model('Booking', bookingSchema);

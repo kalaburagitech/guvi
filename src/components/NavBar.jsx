@@ -8,6 +8,7 @@ import {
   InputAdornment,
   Input,
   Button,
+  Typography,
 } from "@mui/material";
 
 import SearchIcon from "@mui/icons-material/Search";
@@ -47,15 +48,48 @@ export default function NavBar({ setSearchedHotel }) {
           gap={2}
           padding={1}
         >
-          <Grid2 item>
-            <Link to="/" className="logo-link">
-              <img
-                src="https://www.guvi.in/web-build/images/guvi-logo.8eeef9e2027d374479531095b012a87e.svg"
-                alt="Guvi Logo"
-                className="logo-img"
-              />
-            </Link>
-          </Grid2>
+        <Grid2 item style={{ display: "flex", alignItems: "center" }}>
+           <Link to="/" className="logo-link">
+    <img
+      src="https://i.postimg.cc/rF7SGTHQ/test-1-Photoroom.jpg"
+      alt="Guvi Logo"
+      className="logo-img"
+      style={{
+        width: "50px",
+        height: "auto",
+        display: "block",
+        borderRadius: "8px",
+      }}
+    />
+  </Link>
+  <div style={{ display: "flex", alignItems: "center", marginRight: "10px" }}>
+  <span
+    style={{
+      color: "#4e77f0",
+      fontWeight: "bold",
+      fontSize: "1.5rem",
+      fontFamily: "'Poppins', sans-serif", // Stylish font for "Feast"
+    }}
+  >
+    Feast
+  </span>
+  <span
+    style={{
+      color: "#39fdd2",
+      fontWeight: "bold",
+      fontSize: "1.5rem",
+      fontFamily: "'Montserrat', sans-serif", // Stylish font for "finder"
+    }}
+  >
+    finder
+  </span>
+</div>
+
+ 
+</Grid2>
+
+
+
 
           <Grid2 item>
             <Autocomplete

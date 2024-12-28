@@ -130,7 +130,7 @@ export default function BookingModal({ handleClose, modalState }) {
             selectedDate,
             selectedTime,
             selectedSeats,
-            status: "booked",
+            status: "pending",
           }
         );
 

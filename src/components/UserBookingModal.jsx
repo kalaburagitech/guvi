@@ -22,21 +22,22 @@ export default function UserBookingModal({ handleClose, open }) {
 
   // Get user info from localStorage
   const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-  const { _id: userId } = userInfo;
+  const { _id: userId, email } = userInfo;
 
   useEffect(() => {
-    fetchBookingDetail();
+    fetchBookingDetails();
   }, []);
 
-  const fetchBookingDetail = async () => {
+  const fetchBookingDetails = async () => {
     try {
-      if (userId) {
-        const response = await axios.get(
-          `http://localhost:5000/api/bookings/${userId}`
-        );
-        if (response?.data) {
-          setBookingData(response.data);
-        }
+      const endpoint =
+        email === "admin@gmail.com"
+          ? "http://localhost:5000/api/all-bookings"
+          : `http://localhost:5000/api/bookings/${userId}`;
+
+      const response = await axios.get(endpoint);
+      if (response?.data) {
+        setBookingData(response.data);
       }
     } catch (error) {
       console.error("Error fetching booking details:", error);
@@ -44,28 +45,105 @@ export default function UserBookingModal({ handleClose, open }) {
     }
   };
 
-  const handleCancel = async (bookingId) => {
+  const updateBookingStatus = async (bookingId, status) => {
     try {
-      if (!bookingId) {
-        enqueueSnackbar("Invalid booking ID.", { variant: "error" });
-        return;
-      }
       const response = await axios.put(
-        `http://localhost:5000/api/cancelBooking/${bookingId}`
+        `http://localhost:5000/api/updateBooking/${bookingId}`,
+        { status }
       );
-      if (response?.data?.message === "Booking cancelled successfully.") {
-        enqueueSnackbar("Booking cancelled successfully!", {
-          variant: "success",
-        });
-        fetchBookingDetail(); // Refresh the data after cancellation
+
+      if (response?.data?.message === "Booking updated successfully.") {
+        enqueueSnackbar(`Booking ${status} successfully!`, { variant: "success" });
+        fetchBookingDetails(); // Refresh the data after status update
       } else {
-        enqueueSnackbar(response?.data?.message || "Failed to cancel booking.", {
+        enqueueSnackbar(response?.data?.message || "Failed to update booking.", {
           variant: "error",
         });
       }
     } catch (error) {
-      console.error("Error cancelling booking:", error);
-      enqueueSnackbar("Failed to cancel the booking!", { variant: "error" });
+      console.error("Error updating booking:", error);
+      enqueueSnackbar("Failed to update the booking!", { variant: "error" });
+    }
+  };
+
+  const renderActionButtons = (row) => {
+    if (email === "admin@gmail.com") {
+      if (row.status === "pending") {
+        return (
+          <>
+            <Grid item>
+              <Button
+                variant="contained"
+                color="success"
+                onClick={() => updateBookingStatus(row._id, "booked")}
+              >
+                Accept
+              </Button>
+            </Grid>
+            <Grid item>
+              <Button
+                variant="contained"
+                color="error"
+                onClick={() => updateBookingStatus(row._id, "cancelled_by_admin")}
+              >
+                Reject
+              </Button>
+            </Grid>
+          </>
+        );
+      }
+      if (row.status === "booked") {
+        return <Button variant="contained" color="success">Accepted</Button>;
+      }
+      if (row.status === "cancelled_by_user") {
+        return <Button variant="contained" color="info">Cancelled by User</Button>;
+      }
+      if (row.status === "cancelled_by_admin") {
+        return <Button variant="contained" color="info">Cancelled by Admin</Button>;
+      }
+    } else {
+      if (row.status === "pending") {
+        return (
+          <>
+            <Grid item>
+              <Button variant="contained" color="warning" disabled>
+                Pending
+              </Button>
+            </Grid>
+            <Grid item>
+              <Button
+                variant="contained"
+                color="error"
+                onClick={() => updateBookingStatus(row._id, "cancelled_by_user")}
+              >
+                Cancel
+              </Button>
+            </Grid>
+          </>
+        );
+      }
+      if (row.status === "booked") {
+        return (
+          <>
+            <Button variant="contained" color="success" disabled>
+              Accepted
+            </Button>
+            <Button
+              variant="contained"
+              color="error"
+              onClick={() => updateBookingStatus(row._id, "cancelled_by_user")}
+            >
+              Cancel
+            </Button>
+          </>
+        );
+      }
+      if (row.status === "cancelled_by_user") {
+        return <Button variant="contained" color="info" disabled>Cancelled by You</Button>;
+      }
+      if (row.status === "cancelled_by_admin") {
+        return <Button variant="contained" color="info" disabled>Cancelled by Admin</Button>;
+      }
     }
   };
 
@@ -77,57 +155,47 @@ export default function UserBookingModal({ handleClose, open }) {
       aria-describedby="modal-modal-description"
     >
       <Box sx={style}>
-        <Grid>
-          <Typography variant="h4">Your Booking Details</Typography>
-        </Grid>
-
-        <Grid>
-          <TableContainer component={Paper}>
-            <Table sx={{ minWidth: 650 }} aria-label="caption table">
-              <TableHead>
-                <TableRow>
-                  <TableCell>Hotel ID</TableCell>
-                  <TableCell align="right">Date</TableCell>
-                  <TableCell align="right">Seats</TableCell>
-                  <TableCell align="right">Time</TableCell>
-                  <TableCell align="right">Status</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {bookingData.length > 0 ? (
-                  bookingData.map((row) => (
-                    <TableRow key={row._id}>
-                      <TableCell component="th" scope="row">
-                        {row.hotelId}
-                      </TableCell>
-                      <TableCell align="right">{row.selectedDate}</TableCell>
-                      <TableCell align="right">{row.selectedSeats}</TableCell>
-                      <TableCell align="right">{row.selectedTime}</TableCell>
-                      <TableCell align="right">
-                        <Grid>
-                          <Button
-                            variant="contained"
-                            color={row.status === "cancelled" ? "info" : "error"}
-                            onClick={() => handleCancel(row._id)} // Pass the booking ID directly
-                            disabled={row.status === "cancelled"}
-                          >
-                            {row.status === "cancelled" ? "Cancelled" : "Cancel"}
-                          </Button>
-                        </Grid>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={5} align="center">
-                      No bookings found.
+        <Typography variant="h4">Booking Details</Typography>
+        <TableContainer component={Paper}>
+          <Table sx={{ minWidth: 650 }} aria-label="caption table">
+            <TableHead>
+              <TableRow>
+                <TableCell>User Name</TableCell>
+                <TableCell>User Email</TableCell>
+                <TableCell>Hotel ID</TableCell>
+                <TableCell align="right">Date</TableCell>
+                <TableCell align="right">Seats</TableCell>
+                <TableCell align="right">Time</TableCell>
+                <TableCell align="right">Status</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {bookingData.length > 0 ? (
+                bookingData.map((row) => (
+                  <TableRow key={row._id}>
+                    <TableCell>{row.userName}</TableCell>
+                    <TableCell>{row.userEmail}</TableCell>
+                    <TableCell>{row.hotelId}</TableCell>
+                    <TableCell align="right">{row.selectedDate}</TableCell>
+                    <TableCell align="right">{row.selectedSeats}</TableCell>
+                    <TableCell align="right">{row.selectedTime}</TableCell>
+                    <TableCell align="right">
+                      <Grid container spacing={2}>
+                        {renderActionButtons(row)}
+                      </Grid>
                     </TableCell>
                   </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Grid>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={7} align="center">
+                    No bookings found.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
       </Box>
     </Modal>
   );

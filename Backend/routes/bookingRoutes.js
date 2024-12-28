@@ -17,7 +17,7 @@ router.post('/create-booking', async (req, res) => {
       selectedDate,
       selectedTime,
       selectedSeats,
-      status: "booked", // Explicitly set the status
+      status: "pending", // Explicitly set the status
     });
 
     await newBooking.save();
@@ -69,6 +69,42 @@ router.put('/cancelBooking/:bookingId', async (req, res) => {
     res.status(500).json({ message: "Failed to cancel booking." });
   }
 });
+
+// Fetch all bookings for admin
+router.get('/all-bookings', async (req, res) => {
+  try {
+    const bookings = await Booking.find();
+    if (bookings.length === 0) {
+      return res.status(404).json({ message: 'No bookings found.' });
+    }
+    res.status(200).json(bookings);
+  } catch (error) {
+    console.error('Error fetching all bookings:', error);
+    res.status(500).json({ message: 'Failed to fetch bookings.' });
+  }
+});
+
+// Update booking status (already exists)
+router.put('/updateBooking/:bookingId', async (req, res) => {
+  const { bookingId } = req.params;
+  const { status } = req.body;
+
+  try {
+    const booking = await Booking.findById(bookingId);
+    if (!booking) {
+      return res.status(404).json({ message: 'Booking not found.' });
+    }
+
+    booking.status = status;
+    await booking.save();
+
+    res.status(200).json({ message: 'Booking updated successfully.' });
+  } catch (error) {
+    console.error('Error updating booking:', error);
+    res.status(500).json({ message: 'Failed to update booking.' });
+  }
+});
+
 
 
 
