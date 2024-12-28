@@ -1,39 +1,14 @@
 const mongoose = require('mongoose');
 
 const bookingSchema = new mongoose.Schema({
-  userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  },
-  hotelId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Hotel',
-    required: true
-  },
-  selectedDate: {
-    type: String,
-    required: true
-  },
-  selectedTime: {
-    type: String,
-    required: true
-  },
-  selectedSeats: {
-    type: Number,
-    required: true
-  },
-  status: {
-    type: String,
-    enum: ['booked', 'cancelled', 'completed'],
-    default: 'booked'
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now
-  }
-});
+  userId: { type: String, required: true },
+  userName: { type: String, required: true },
+  userEmail: { type: String, required: true },
+  hotelId: { type: String, required: true },
+  selectedDate: { type: String, required: true },
+  selectedTime: { type: String, required: true },
+  selectedSeats: { type: Number, required: true },
+  status: { type: String, default: "booked" }, // Default status
+}, { timestamps: true });
 
-const Booking = mongoose.model('Booking', bookingSchema);
-
-module.exports = Booking;
+module.exports = mongoose.model('Booking', bookingSchema);

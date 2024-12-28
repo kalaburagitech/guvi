@@ -6,6 +6,8 @@ const authRoutes = require('./routes/authRoutes');
 const restaurantRoutes = require('./routes/restaurantRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
 const reservationRoutes = require('./routes/reservationRoutes');
+const bookingRoutes = require('./routes/bookingRoutes');
+
 
 dotenv.config();
 connectDB();
@@ -18,7 +20,7 @@ app.use(express.json());
 app.use('/api', authRoutes);
 // Use the restaurant routes
 app.use('/api', restaurantRoutes);
-app.use('/api', authRoutes);
+app.use('/api', bookingRoutes);
 
 // app.use('/api/reviews', reviewRoutes);
 // app.use('/api/reservations', reservationRoutes);

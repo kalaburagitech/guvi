@@ -22,7 +22,8 @@ export default function BookingModal({ handleClose, modalState }) {
   const { id, location } = modalState || {};
   const { enqueueSnackbar } = useSnackbar();
   const username = localStorage.getItem("authToken");
-
+  const userInfo = JSON.parse(localStorage.getItem("userInfo")) || {};
+  const { name, email, _id: userId } = userInfo;
   const [bookingState, setBookingState] = useState({
     selectedTime: "",
     selectedDate: "",
@@ -87,20 +88,29 @@ export default function BookingModal({ handleClose, modalState }) {
 
   const handleBooking = async () => {
     setIsLoading(true);
+  
     const { selectedDate, selectedTime, selectedSeats } = bookingState;
-    if (username && id && selectedDate && selectedTime && selectedSeats) {
+  
+    const userInfo = JSON.parse(localStorage.getItem("userInfo")); // Get user info from localStorage
+    const { _id: userId, name: userName, email: userEmail } = userInfo;
+  
+    if (userId && userName && userEmail && id && selectedDate && selectedTime && selectedSeats) {
       try {
         const response = await axios.post(
-          "https://fsd6061we-t-node.onrender.com/create-booking",
+          "http://localhost:5000/api/create-booking", // Adjust the URL based on your backend
           {
-            username,
+            userId,
+            userName,
+            userEmail,
             hotelId: id,
             selectedDate,
             selectedTime,
             selectedSeats,
+            status: "booked", // Explicitly pass the status if required
           }
         );
-        if (response.data === "Booking created") {
+  
+        if (response.status === 201) {
           setBookingState({
             selectedTime: "",
             selectedDate: "",
@@ -110,6 +120,7 @@ export default function BookingModal({ handleClose, modalState }) {
           enqueueSnackbar("Booking Created successfully!", { variant: "success" });
         }
       } catch (error) {
+        console.error("Error creating booking:", error);
         enqueueSnackbar("Error creating booking!", { variant: "error" });
       } finally {
         setIsLoading(false);
@@ -119,7 +130,7 @@ export default function BookingModal({ handleClose, modalState }) {
       setIsLoading(false);
     }
   };
-
+  
   const getBookingSlots = async (selectedDate) => {
     try {
       const response = await axios.get(
@@ -149,6 +160,21 @@ export default function BookingModal({ handleClose, modalState }) {
         >
           <Close />
         </IconButton>
+        <Box sx={{ mb: 2 }}>
+          <Typography variant="h6">User Details:</Typography>
+          <Typography variant="body1">
+            <strong>Name:</strong> {name}
+          </Typography>
+          <Typography variant="body1">
+            <strong>Email:</strong> {email}
+          </Typography>
+          <Typography variant="body1">
+            <strong>User ID:</strong> {userId}
+          </Typography>
+          <Typography variant="body1">
+            <strong>Hotel ID:</strong> {id}
+          </Typography>
+        </Box>
         <Grid container spacing={3}>
           {/* Left side - Hotel Details */}
           <Grid item xs={12} md={6}>
@@ -270,7 +296,7 @@ const timeSlots = [
   "1 PM - 2 PM",
   "7 PM - 8 PM",
   "8 PM - 9 PM",
-  "9 PM - 10 PM",
+  "9 PM - 10 PM", 
   "10 PM - 11 PM",
 ];
 

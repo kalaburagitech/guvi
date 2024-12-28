@@ -1,52 +1,75 @@
 const express = require('express');
 const router = express.Router();
 const Booking = require('../models/Booking');
-
-// Create a new booking
-router.post('/book', async (req, res) => {
+router.post('/create-booking', async (req, res) => {
   try {
-    const { userId, hotelId, selectedDate, selectedTime, selectedSeats, status } = req.body;
+    const { userId, userName, userEmail, hotelId, selectedDate, selectedTime, selectedSeats } = req.body;
+
+    if (!userId || !userName || !userEmail || !hotelId || !selectedDate || !selectedTime || !selectedSeats) {
+      return res.status(400).json({ message: 'All fields are required' });
+    }
 
     const newBooking = new Booking({
       userId,
+      userName,
+      userEmail,
       hotelId,
       selectedDate,
       selectedTime,
       selectedSeats,
-      status
+      status: "booked", // Explicitly set the status
     });
 
-    const savedBooking = await newBooking.save();
-    res.status(201).json(savedBooking);
+    await newBooking.save();
+    res.status(201).json({ message: 'Booking created successfully', booking: newBooking });
   } catch (error) {
     console.error('Error creating booking:', error);
-    res.status(500).json({ message: 'Error creating booking', error: error.message });
+    res.status(500).json({ message: 'Internal server error' });
   }
 });
 
-// Get all bookings for a user
-router.get('/user/:userId', async (req, res) => {
+
+// Fetch bookings by userId
+router.get('/bookings/:userId', async (req, res) => {
+  const { userId } = req.params;
+
   try {
-    const bookings = await Booking.find({ userId: req.params.userId }).populate('hotelId');
-    res.json(bookings);
+    // Find bookings for the given userId
+    const bookings = await Booking.find({ userId });
+
+    if (bookings.length === 0) {
+      return res.status(404).json({ message: "No user found or no bookings available." });
+    }
+
+    res.status(200).json(bookings);
   } catch (error) {
-    console.error('Error fetching user bookings:', error);
-    res.status(500).json({ message: 'Error fetching user bookings', error: error.message });
+    console.error("Error fetching bookings:", error);
+    res.status(500).json({ message: "Failed to fetch bookings." });
   }
 });
 
-// Get all bookings for a hotel on a specific date
-router.get('/hotel/:hotelId/:date', async (req, res) => {
+router.put('/cancelBooking/:bookingId', async (req, res) => {
+  const { bookingId } = req.params;
+
+  console.log("Received bookingId:", bookingId); // Add this log
+
   try {
-    const bookings = await Booking.find({ 
-      hotelId: req.params.hotelId,
-      selectedDate: req.params.date
-    });
-    res.json(bookings);
+    const booking = await Booking.findById(bookingId);
+
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found." });
+    }
+
+    booking.status = "cancelled";
+    await booking.save();
+
+    res.status(200).json({ message: "Booking cancelled successfully." });
   } catch (error) {
-    console.error('Error fetching hotel bookings:', error);
-    res.status(500).json({ message: 'Error fetching hotel bookings', error: error.message });
+    console.error("Error cancelling booking:", error);
+    res.status(500).json({ message: "Failed to cancel booking." });
   }
 });
+
+
 
 module.exports = router;
