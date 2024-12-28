@@ -1,37 +1,40 @@
 import { Card, CardContent, Grid2, Typography, CardMedia } from "@mui/material";
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from "react-router-dom";
 import BookingModal from "./BookingModal";
 import { useState, useEffect } from "react";
 
 export default function HotelCards({ selectedTags, sort, searchedHotel }) {
   const username = localStorage.getItem("authToken");
-  const [modalState, setModalState] = useState(null); // Make modalState hold the clicked hotel data
-  const [restaurentInfo, setRestaurentInfo] = useState([]); // To hold the fetched hotel data
-  const [loading, setLoading] = useState(true); // To track loading state
-  const [error, setError] = useState(null); // To handle errors during the fetch process
- const navigate = useNavigate();
+  const [modalState, setModalState] = useState(null); // Hold clicked hotel data
+  const [restaurentInfo, setRestaurentInfo] = useState([]); // Fetched hotel data
+  const [filteredHotels, setFilteredHotels] = useState([]); // Filtered and sorted data
+  const [loading, setLoading] = useState(true); // Loading state
+  const [error, setError] = useState(null); // Error handling
+  const navigate = useNavigate();
   const { location } = useParams();
 
-  // Function to fetch restaurant data from the API
+  // Fetch hotel data from the API
   useEffect(() => {
     const fetchHotelData = async () => {
       setLoading(true);
-      setError(null); // Reset error state
+      setError(null);
 
       try {
-        const cityName = location ? location.toLowerCase() : 'delhi';
+        const cityName = location ? location.toLowerCase() : "delhi";
         const response = await fetch(`http://localhost:5000/api/restaurants/${cityName}`);
-        
+
         if (!response.ok) {
-          throw new Error('Failed to fetch hotel data');
+          throw new Error("Failed to fetch hotel data");
         }
 
         const data = await response.json();
 
         if (Array.isArray(data)) {
-          setRestaurentInfo(data); // Only set if data is an array
+          setRestaurentInfo(data); // Store original data
+          setFilteredHotels(data); // Initialize filtered data
         } else {
-          setRestaurentInfo([]); // Set an empty array if data is not valid
+          setRestaurentInfo([]);
+          setFilteredHotels([]);
         }
       } catch (error) {
         setError(error.message);
@@ -43,63 +46,44 @@ export default function HotelCards({ selectedTags, sort, searchedHotel }) {
     fetchHotelData();
   }, [location]);
 
-  // Apply search filter if searchedHotel exists
+  // Apply filters (search and tags)
   useEffect(() => {
+    let updatedHotels = [...restaurentInfo];
+
+    // Apply search filter
     if (searchedHotel) {
-      setRestaurentInfo((prevData) =>
-        prevData.filter((eachHotel) =>
-          eachHotel.name.toLowerCase().includes(searchedHotel.toLowerCase())
-        )
+      updatedHotels = updatedHotels.filter((hotel) =>
+        hotel.name.toLowerCase().includes(searchedHotel.toLowerCase())
       );
     }
-  }, [searchedHotel]);
 
-  // Apply tags filter if selectedTags exists
-  useEffect(() => {
+    // Apply tags filter
     if (selectedTags?.length) {
-      setRestaurentInfo((prevData) =>
-        prevData.filter((eachHotel) => 
-          eachHotel.tags.some((tag) => selectedTags.includes(tag))
-        )
+      updatedHotels = updatedHotels.filter((hotel) =>
+        hotel.tags.some((tag) => selectedTags.includes(tag))
       );
     }
-  }, [selectedTags]);
 
-  // Sorting function
-  const handleSort = (data) => {
-    if (!Array.isArray(data)) return []; // Guard against non-array input
-
-    const sortedData = [...data]; // Create a copy of the data to avoid mutating the original
-    if (sort === 'Rating') {
-      return sortedData.sort((a, b) => b.ratings - a.ratings);
-    } else if (sort === 'Price High To Low') {
-      return sortedData.sort((a, b) => b.price - a.price);
-    } else if (sort === 'Price Low To High') {
-      return sortedData.sort((a, b) => a.price - b.price);
+    // Apply sorting
+    if (sort === "Rating") {
+      updatedHotels.sort((a, b) => b.ratings - a.ratings);
+    } else if (sort === "Price High To Low") {
+      updatedHotels.sort((a, b) => b.price - a.price);
+    } else if (sort === "Price Low To High") {
+      updatedHotels.sort((a, b) => a.price - b.price);
     }
-    return sortedData;
-  };
 
-  const sortedHotels = handleSort(restaurentInfo);
+    setFilteredHotels(updatedHotels);
+  }, [searchedHotel, selectedTags, sort, restaurentInfo]);
 
   const handleBookingModelOpen = (eachHotel) => {
-    const hotelId = eachHotel.id;
-    
-    // Construct the API URL with the encoded city name and hotel ID
-    const apiUrl = `http://localhost:5000/api/restaurants/${location}/${hotelId}`;
-  
     if (username) {
-      // Pass the location as lowercase
       setModalState({ ...eachHotel, location: location.toLowerCase() });
     } else {
       alert("Please log in first.");
       navigate("/signin");
     }
   };
-  
-  
-  
-  
 
   // Loading and error handling UI
   if (loading) {
@@ -113,10 +97,11 @@ export default function HotelCards({ selectedTags, sort, searchedHotel }) {
   return (
     <>
       <Grid2 container gap={1}>
-        {sortedHotels.map((eachHotel) => {
-          const { id, name, location, price, tags, priceDetail, ratings, image } = eachHotel;
+        {filteredHotels.map((eachHotel) => {
+          const { id, name, location, priceDetail, ratings, tags, image } = eachHotel;
+
           return (
-            <Grid2 key={id} onClick={() => handleBookingModelOpen(eachHotel, location)} style={{ cursor: "pointer" }}>
+            <Grid2 key={id} onClick={() => handleBookingModelOpen(eachHotel)} style={{ cursor: "pointer" }}>
               <Card sx={{ maxWidth: 345 }}>
                 <div style={{ position: "relative" }}>
                   <div
@@ -144,7 +129,7 @@ export default function HotelCards({ selectedTags, sort, searchedHotel }) {
                     {location}
                   </Typography>
                   <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                    {priceDetail} , {tags.join(" ")}
+                    {priceDetail}, {tags.join(", ")}
                   </Typography>
                 </CardContent>
               </Card>
@@ -153,10 +138,9 @@ export default function HotelCards({ selectedTags, sort, searchedHotel }) {
         })}
       </Grid2>
 
-      {/* Pass the hotel data to the modal */}
       <BookingModal
-        modalState={modalState} // Hotel data passed to modal
-        handleClose={() => setModalState(null)} // Close the modal by resetting modalState
+        modalState={modalState}
+        handleClose={() => setModalState(null)}
       />
     </>
   );

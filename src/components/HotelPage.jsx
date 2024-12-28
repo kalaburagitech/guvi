@@ -13,10 +13,17 @@ import Filter from "./Filter";
 import HotelCards from "./HotelCards";
 import { useParams, useNavigate } from "react-router-dom";
 
+const sortByData = [
+  { value: "Rating", name: "Rating" },
+  { value: "Price High To Low", name: "Price High To Low" },
+  { value: "Price Low To High", name: "Price Low To High" },
+];
+
 export default function HotelPage({ searchedHotel }) {
   const [sort, setSort] = useState("Rating");
   const [selectedTags, setSelectedTags] = useState([]);
-  const [restaurant, setRestaurant] = useState([]); // Added state for restaurant data
+  const [restaurant, setRestaurant] = useState([]); // Filtered data
+  const [allRestaurants, setAllRestaurants] = useState([]); // Original data
   const { location } = useParams(); // Extract location from URL
   const navigate = useNavigate(); // Navigate to handle default location
 
@@ -33,24 +40,37 @@ export default function HotelPage({ searchedHotel }) {
       if (!location) return;
 
       try {
-        // Fetch data for the specific location
         const response = await fetch(`http://localhost:5000/api/restaurants/${location}`);
         const data = await response.json();
-        setRestaurant(data); // Set the fetched data to the restaurant state
+        setAllRestaurants(data); // Store original data
+        setRestaurant(data); // Initialize filtered data
       } catch (error) {
         console.error("Error fetching data:", error);
       }
     };
 
     fetchRestaurants();
-  }, [location]); // Run this effect whenever location changes
+  }, [location]);
 
+  // Handle filter changes
   const handleFilterChange = (event) => {
-    if (selectedTags.find((ele) => ele === event.target.value)) {
-      const updatedTags = selectedTags.filter((ele) => ele !== event.target.value);
-      setSelectedTags(updatedTags);
+    const value = event.target.value;
+
+    let updatedTags = [];
+    if (selectedTags.includes(value)) {
+      updatedTags = selectedTags.filter((tag) => tag !== value);
     } else {
-      setSelectedTags([...selectedTags, event.target.value]);
+      updatedTags = [...selectedTags, value];
+    }
+    setSelectedTags(updatedTags);
+
+    if (updatedTags.length === 0) {
+      setRestaurant(allRestaurants); // Reset to original data if no filters
+    } else {
+      const filteredData = allRestaurants.filter((item) =>
+        updatedTags.some((tag) => item.tags.includes(tag))
+      );
+      setRestaurant(filteredData);
     }
   };
 
@@ -104,15 +124,14 @@ export default function HotelPage({ searchedHotel }) {
         </Grid2>
 
         <Grid2 container>
-          <HotelCards selectedTags={selectedTags} sort={sort} hotelData={restaurant} searchedHotel={searchedHotel}></HotelCards>
+          <HotelCards
+            selectedTags={selectedTags}
+            sort={sort}
+            hotelData={restaurant}
+            searchedHotel={searchedHotel}
+          ></HotelCards>
         </Grid2>
       </Grid2>
     </Grid2>
   );
 }
-
-const sortByData = [
-  { value: "Rating", name: "Rating" },
-  { value: "Price High To Low", name: "Price High To Low" },
-  { value: "Price Low To High", name: "Price Low To High" },
-];
