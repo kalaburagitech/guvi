@@ -213,7 +213,7 @@ export default function BookingModal({ handleClose, modalState }) {
         }
       );
 
-      if (response.status === 201) {
+      if (response.status === 200) {
         enqueueSnackbar("Reply submitted successfully!", { variant: "success" });
         setReply("");  // Clear reply input after submitting
         getReviews(id);  // Refresh reviews after reply
