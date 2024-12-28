@@ -8,6 +8,8 @@ import {
   Chip,
   Button,
   IconButton,
+  TextField,
+  Rating,
 } from "@mui/material";
 import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -34,6 +36,13 @@ export default function BookingModal({ handleClose, modalState }) {
   const [bookedTimeSlots, setBookedTimeSlots] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
+  // New state for review and rating
+  const [rating, setRating] = useState(0);
+  const [review, setReview] = useState("");
+  const [reviews, setReviews] = useState([]);
+
+  console.log(reviews);
+  
   useEffect(() => {
     if (id && location) {
       setBookingState({
@@ -52,12 +61,25 @@ export default function BookingModal({ handleClose, modalState }) {
 
       if (data) {
         setHotelDetails(data);
+        getReviews(hotelId);  // Fetch reviews when hotel details are loaded
       } else {
         enqueueSnackbar("Hotel not found!", { variant: "error" });
       }
     } catch (error) {
       console.error("Error fetching hotel details:", error);
       enqueueSnackbar("Error fetching hotel details!", { variant: "error" });
+    }
+  };
+
+  const getReviews = async (hotelId) => {
+    try {
+      const response = await axios.get(`http://localhost:5000/api/get-reviews/${hotelId}`);
+      if (response.data) {
+        setReviews(response.data); // Save the reviews in the state
+      }
+    } catch (error) {
+      console.error("Error fetching reviews:", error);
+      enqueueSnackbar("Error fetching reviews!", { variant: "error" });
     }
   };
 
@@ -88,16 +110,16 @@ export default function BookingModal({ handleClose, modalState }) {
 
   const handleBooking = async () => {
     setIsLoading(true);
-  
+
     const { selectedDate, selectedTime, selectedSeats } = bookingState;
-  
-    const userInfo = JSON.parse(localStorage.getItem("userInfo")); // Get user info from localStorage
+
+    const userInfo = JSON.parse(localStorage.getItem("userInfo"));
     const { _id: userId, name: userName, email: userEmail } = userInfo;
-  
+
     if (userId && userName && userEmail && id && selectedDate && selectedTime && selectedSeats) {
       try {
         const response = await axios.post(
-          "http://localhost:5000/api/create-booking", // Adjust the URL based on your backend
+          "http://localhost:5000/api/create-booking",
           {
             userId,
             userName,
@@ -106,10 +128,10 @@ export default function BookingModal({ handleClose, modalState }) {
             selectedDate,
             selectedTime,
             selectedSeats,
-            status: "booked", // Explicitly pass the status if required
+            status: "booked",
           }
         );
-  
+
         if (response.status === 201) {
           setBookingState({
             selectedTime: "",
@@ -130,7 +152,7 @@ export default function BookingModal({ handleClose, modalState }) {
       setIsLoading(false);
     }
   };
-  
+
   const getBookingSlots = async (selectedDate) => {
     try {
       const response = await axios.get(
@@ -145,6 +167,34 @@ export default function BookingModal({ handleClose, modalState }) {
     }
   };
 
+  const handleReviewSubmit = async () => {
+    if (rating === 0 || review.trim() === "") {
+      enqueueSnackbar("Please provide both a rating and a review!", { variant: "warning" });
+      return;
+    }
+
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/api/submit-review",
+        {
+          hotelId: id,
+          userId,
+          name,
+          rating,
+          review,
+        }
+      );
+
+      if (response.status === 201) {
+        enqueueSnackbar("Review submitted successfully!", { variant: "success" });
+        getReviews(id);  // Refresh reviews after submitting one
+      }
+    } catch (error) {
+      console.error("Error submitting review:", error);
+      enqueueSnackbar("Error submitting review!", { variant: "error" });
+    }
+  };
+
   return (
     <Modal open={Boolean(modalState)} onClose={handleClose}>
       <Box sx={style}>
@@ -152,7 +202,7 @@ export default function BookingModal({ handleClose, modalState }) {
           aria-label="close"
           onClick={handleClose}
           sx={{
-            position: 'absolute',
+            position: "absolute",
             right: 8,
             top: 8,
             color: (theme) => theme.palette.grey[500],
@@ -183,21 +233,36 @@ export default function BookingModal({ handleClose, modalState }) {
                 <img
                   src={hotelDetails.image}
                   alt={hotelDetails.name}
-                  style={{ width: "100%", height: "300px", objectFit: "cover", borderRadius: "8px" }}
+                  style={{
+                    width: "100%",
+                    height: "300px",
+                    objectFit: "cover",
+                    borderRadius: "8px",
+                  }}
                 />
-                <Typography variant="h4" sx={{ mt: 2, mb: 1, fontWeight: 'bold' }}>{hotelDetails.name}</Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <Typography variant="h4" sx={{ mt: 2, mb: 1, fontWeight: "bold" }}>
+                  {hotelDetails.name}
+                </Typography>
+                <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
                   <LocationOn color="primary" />
-                  <Typography variant="body1" sx={{ ml: 1 }}>{hotelDetails.location}</Typography>
+                  <Typography variant="body1" sx={{ ml: 1 }}>
+                    {hotelDetails.location}
+                  </Typography>
                 </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
                   <AttachMoney color="primary" />
-                  <Typography variant="h6" sx={{ ml: 1 }}>₹{hotelDetails.price}</Typography>
-                  <Typography variant="body2" sx={{ ml: 1 }}>({hotelDetails.priceDetail})</Typography>
+                  <Typography variant="h6" sx={{ ml: 1 }}>
+                    ₹{hotelDetails.price}
+                  </Typography>
+                  <Typography variant="body2" sx={{ ml: 1 }}>
+                    ({hotelDetails.priceDetail})
+                  </Typography>
                 </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
                   <Star color="primary" />
-                  <Typography variant="h6" sx={{ ml: 1 }}>{hotelDetails.ratings}</Typography>
+                  <Typography variant="h6" sx={{ ml: 1 }}>
+                    {hotelDetails.ratings}
+                  </Typography>
                 </Box>
                 <Box>
                   {hotelDetails.tags.map((tag, index) => (
@@ -206,25 +271,64 @@ export default function BookingModal({ handleClose, modalState }) {
                 </Box>
               </Box>
             )}
+            <Box sx={{ mt: 3 }}>
+  <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+    Reviews
+  </Typography>
+  {reviews.length > 0 ? (
+    reviews.map((review) => (
+      <Box key={review._id} sx={{ mt: 2, border: "1px solid #ddd", padding: "16px", borderRadius: "8px" }}>
+        <Box sx={{ display: "flex", flexDirection: "column" }}>
+          {/* Username in large letters and uppercase */}
+          <Typography variant="h6" sx={{ fontWeight: "bold", textTransform: "uppercase" }}>
+            {review.userName}
+          </Typography>
+          
+          {/* Rating Display */}
+          <Box sx={{ display: "flex", alignItems: "center" }}>
+            <Rating value={review.rating} readOnly />
+          </Box>
+          
+          {/* Review text */}
+          <Typography variant="body2" sx={{ mt: 1 }}>
+            {review.review}
+          </Typography>
+          
+          {/* Date */}
+          <Typography variant="caption" sx={{ mt: 1, display: "block", color: "gray" }}>
+            {new Date(review.createdAt).toLocaleString()}
+          </Typography>
+        </Box>
+      </Box>
+    ))
+  ) : (
+    <Typography variant="body2">No reviews yet.</Typography>
+  )}
+</Box>
+
           </Grid>
 
-          {/* Right side - Booking Form */}
+          {/* Right side - Booking Form + Review Section */}
           <Grid item xs={12} md={6}>
-            <Typography variant="h5" gutterBottom>Make a Reservation</Typography>
+            <Typography variant="h5" gutterBottom>
+              Make a Reservation
+            </Typography>
             <Box sx={{ mb: 3 }}>
               <LocalizationProvider dateAdapter={AdapterDayjs}>
                 <DemoContainer components={["DatePicker"]}>
                   <DatePicker
                     label="Select Date"
                     onChange={handleDateChange}
-                    sx={{ width: '100%' }}
+                    sx={{ width: "100%" }}
                   />
                 </DemoContainer>
               </LocalizationProvider>
             </Box>
 
             <Box sx={{ mb: 3 }}>
-              <Typography variant="h6" gutterBottom>Select Time</Typography>
+              <Typography variant="h6" gutterBottom>
+                Select Time
+              </Typography>
               <Grid container spacing={1}>
                 {timeSlots.map((eachTime) => (
                   <Grid item key={eachTime}>
@@ -241,8 +345,10 @@ export default function BookingModal({ handleClose, modalState }) {
             </Box>
 
             <Box sx={{ mb: 3 }}>
-              <Typography variant="h6" gutterBottom>Select Seats</Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <Typography variant="h6" gutterBottom>
+                Select Seats
+              </Typography>
+              <Box sx={{ display: "flex", alignItems: "center" }}>
                 <Group color="primary" />
                 <Slider
                   value={bookingState.selectedSeats}
@@ -266,6 +372,48 @@ export default function BookingModal({ handleClose, modalState }) {
               size="large"
             >
               Make a Booking
+            </LoadingButton>
+
+            {/* Add Star Rating and Review Inputs */}
+            <Box sx={{ mb: 3, mt: 4 }}>
+              <Typography
+                variant="h5"
+                sx={{
+                  fontSize: "1.5rem",
+                  mb: 2,
+                }}
+                gutterBottom
+              >
+                Rate and Review
+              </Typography>
+
+              <Rating
+                name="rating"
+                value={rating}
+                onChange={(event, newValue) => setRating(newValue)}
+                sx={{ mb: 2 }}
+              />
+
+              <TextField
+                label="Write a Review"
+                multiline
+                rows={4}
+                value={review}
+                onChange={(e) => setReview(e.target.value)}
+                fullWidth
+                variant="outlined"
+              />
+            </Box>
+
+            <LoadingButton
+              loading={isLoading}
+              variant="contained"
+              color="primary"
+              onClick={handleReviewSubmit}
+              fullWidth
+              size="large"
+            >
+              Submit Review
             </LoadingButton>
           </Grid>
         </Grid>
@@ -296,7 +444,5 @@ const timeSlots = [
   "1 PM - 2 PM",
   "7 PM - 8 PM",
   "8 PM - 9 PM",
-  "9 PM - 10 PM", 
-  "10 PM - 11 PM",
+  "9 PM - 10 PM",
 ];
-

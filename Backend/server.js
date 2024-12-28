@@ -22,6 +22,9 @@ app.use('/api', authRoutes);
 app.use('/api', restaurantRoutes);
 app.use('/api', bookingRoutes);
 
+// Use the review routes
+app.use('/api', reviewRoutes); // All review routes are prefixed with /api
+
 // app.use('/api/reviews', reviewRoutes);
 // app.use('/api/reservations', reservationRoutes);
 
