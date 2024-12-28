@@ -12,7 +12,14 @@ const restaurantSchema = new mongoose.Schema({
       tags: [String],
       ratings: { type: String, required: true },
       image: { type: String, required: true },
-      discount: { type: Number, required: true }
+      discount: { type: Number, required: true },
+      menuItems: [String],  // Add menuItems array
+      contact: {  // Add contact details
+        phone: { type: String, required: true },
+        email: { type: String, required: true }
+      },
+      hoursOfOperation: { type: String, required: true },  // Add hours of operation
+      photoGallery: [String]  // Add photo gallery
     }
   ],
   mumbai: [
@@ -25,7 +32,14 @@ const restaurantSchema = new mongoose.Schema({
       tags: [String],
       ratings: { type: String, required: true },
       image: { type: String, required: true },
-      discount: { type: Number, required: true }
+      discount: { type: Number, required: true },
+      menuItems: [String],
+      contact: {
+        phone: { type: String, required: true },
+        email: { type: String, required: true }
+      },
+      hoursOfOperation: { type: String, required: true },
+      photoGallery: [String]
     }
   ],
   chennai: [
@@ -38,7 +52,14 @@ const restaurantSchema = new mongoose.Schema({
       tags: [String],
       ratings: { type: String, required: true },
       image: { type: String, required: true },
-      discount: { type: Number, required: true }
+      discount: { type: Number, required: true },
+      menuItems: [String],
+      contact: {
+        phone: { type: String, required: true },
+        email: { type: String, required: true }
+      },
+      hoursOfOperation: { type: String, required: true },
+      photoGallery: [String]
     }
   ],
   bengaluru: [
@@ -51,7 +72,14 @@ const restaurantSchema = new mongoose.Schema({
       tags: [String],
       ratings: { type: String, required: true },
       image: { type: String, required: true },
-      discount: { type: Number, required: true }
+      discount: { type: Number, required: true },
+      menuItems: [String],
+      contact: {
+        phone: { type: String, required: true },
+        email: { type: String, required: true }
+      },
+      hoursOfOperation: { type: String, required: true },
+      photoGallery: [String]
     }
   ]
 });

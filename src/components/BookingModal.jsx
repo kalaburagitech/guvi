@@ -18,7 +18,8 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import axios from "axios";
 import { useSnackbar } from "notistack";
 import { LoadingButton } from "@mui/lab";
-import { LocationOn, Star, AttachMoney, Group, Close } from "@mui/icons-material";
+import { LocationOn, Phone, Email, Restaurant, LocalOffer, Star, AttachMoney, Group, Close } from "@mui/icons-material";
+
 
 export default function BookingModal({ handleClose, modalState }) {
   const { id, location } = modalState || {};
@@ -41,7 +42,7 @@ export default function BookingModal({ handleClose, modalState }) {
   const [review, setReview] = useState("");
   const [reviews, setReviews] = useState([]);
 
-  console.log(reviews);
+  // console.log(hotelDetails);
   
   useEffect(() => {
     if (id && location) {
@@ -228,49 +229,117 @@ export default function BookingModal({ handleClose, modalState }) {
         <Grid container spacing={3}>
           {/* Left side - Hotel Details */}
           <Grid item xs={12} md={6}>
-            {hotelDetails && (
-              <Box>
-                <img
-                  src={hotelDetails.image}
-                  alt={hotelDetails.name}
-                  style={{
-                    width: "100%",
-                    height: "300px",
-                    objectFit: "cover",
-                    borderRadius: "8px",
-                  }}
-                />
-                <Typography variant="h4" sx={{ mt: 2, mb: 1, fontWeight: "bold" }}>
-                  {hotelDetails.name}
-                </Typography>
-                <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-                  <LocationOn color="primary" />
-                  <Typography variant="body1" sx={{ ml: 1 }}>
-                    {hotelDetails.location}
-                  </Typography>
-                </Box>
-                <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-                  <AttachMoney color="primary" />
-                  <Typography variant="h6" sx={{ ml: 1 }}>
-                    ₹{hotelDetails.price}
-                  </Typography>
-                  <Typography variant="body2" sx={{ ml: 1 }}>
-                    ({hotelDetails.priceDetail})
-                  </Typography>
-                </Box>
-                <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                  <Star color="primary" />
-                  <Typography variant="h6" sx={{ ml: 1 }}>
-                    {hotelDetails.ratings}
-                  </Typography>
-                </Box>
-                <Box>
-                  {hotelDetails.tags.map((tag, index) => (
-                    <Chip key={index} label={tag} sx={{ mr: 1, mb: 1 }} />
-                  ))}
-                </Box>
-              </Box>
-            )}
+         { hotelDetails && (
+      <Box>
+        {/* Hotel Image */}
+        <img
+          src={hotelDetails.image}
+          alt={hotelDetails.name}
+          style={{
+            width: "100%",
+            height: "300px",
+            objectFit: "cover",
+            borderRadius: "8px",
+          }}
+        />
+
+        {/* Hotel Name */}
+        <Typography variant="h4" sx={{ mt: 2, mb: 1, fontWeight: "bold" }}>
+          {hotelDetails.name}
+        </Typography>
+
+        {/* Hotel Location */}
+        <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+          <LocationOn color="primary" />
+          <Typography variant="body1" sx={{ ml: 1 }}>
+            {hotelDetails.location}
+          </Typography>
+        </Box>
+
+        {/* Hotel Discount */}
+        <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+          <LocalOffer color="primary" />
+          <Typography variant="body1" sx={{ ml: 1 }}>
+            {hotelDetails.discount}
+          </Typography>
+        </Box>
+{/* Hotel Menu */}
+<Box sx={{ mb: 2 }}>
+  <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+    <Restaurant color="primary" />
+    <Typography variant="body1" sx={{ ml: 1, fontWeight: "bold", fontFamily: "'Poppins', sans-serif", fontSize: "1.2rem" }}>
+      Menu:
+    </Typography>
+  </Box>
+  <Box sx={{ pl: 3 }}>
+    {hotelDetails.menuItems.map((item, index) => (
+      <Typography
+        key={index}
+        variant="body2"
+        sx={{
+          mb: 1,
+          fontFamily: "'Poppins', sans-serif", // You can use any font family here
+          fontWeight: 500,
+          fontSize: "1rem",
+          color: index % 2 === 0 ? "#FF6347" : "#4CAF50", // Alternate color for each item
+          letterSpacing: "0.5px",
+          transition: "color 0.3s ease, transform 0.2s ease",
+          "&:hover": {
+            color: "#FFA500", // Hover color
+            transform: "scale(1.05)", // Slight scale effect on hover
+          },
+        }}
+      >
+        {item}
+      </Typography>
+    ))}
+  </Box>
+</Box>
+
+
+        {/* Hotel Phone */}
+        <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+          <Phone color="primary" />
+          <Typography variant="body1" sx={{ ml: 1 }}>
+            {hotelDetails.contact.phone}
+          </Typography>
+        </Box>
+
+        {/* Hotel Email */}
+        <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+          <Email color="primary" />
+          <Typography variant="body1" sx={{ ml: 1 }}>
+            {hotelDetails.contact.email}
+          </Typography>
+        </Box>
+
+        {/* Hotel Price */}
+        <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+          <AttachMoney color="primary" />
+          <Typography variant="h6" sx={{ ml: 1 }}>
+            ₹{hotelDetails.price}
+          </Typography>
+          <Typography variant="body2" sx={{ ml: 1 }}>
+            ({hotelDetails.priceDetail})
+          </Typography>
+        </Box>
+
+        {/* Hotel Ratings */}
+        <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+          <Star color="primary" />
+          <Typography variant="h6" sx={{ ml: 1 }}>
+            {hotelDetails.ratings}
+          </Typography>
+        </Box>
+
+        {/* Hotel Tags */}
+        <Box>
+          {hotelDetails.tags.map((tag, index) => (
+            <Chip key={index} label={tag} sx={{ mr: 1, mb: 1 }} />
+          ))}
+        </Box>
+      </Box>
+    )}
             <Box sx={{ mt: 3 }}>
   <Typography variant="h6" sx={{ fontWeight: "bold" }}>
     Reviews
